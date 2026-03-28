@@ -1,0 +1,125 @@
+# RNA-seq Differential Expression Pipeline Configuration
+
+# ============================================================================
+# SAMPLE METADATA
+# ============================================================================
+metadata_file: "data/metadata.csv"
+
+# ============================================================================
+# REFERENCE GENOME & ANNOTATION
+# ============================================================================
+reference:
+  # GENCODE human reference (GRCh38)
+  genome_fasta: "data/reference/GRCh38.primary_assembly.genome.fa"
+  gtf: "data/reference/gencode.v38.annotation.gtf"
+  
+  # Or use pre-built STAR index
+  # Download from: https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf
+
+# ============================================================================
+# STAR ALIGNER PARAMETERS
+# ============================================================================
+star:
+  genome_index: "data/reference/STAR_index"
+  threads: 8
+  memory: 40  # GB
+  
+  # Additional STAR parameters
+  outFilterMultimapNmax: 20
+  outFilterMismatchNmax: 999
+  outFilterMismatchNoverReadLmax: 0.04
+  alignIntronMin: 20
+  alignIntronMax: 1000000
+  alignMatesGapMax: 1000000
+
+# ============================================================================
+# FEATURECOUNTS PARAMETERS
+# ============================================================================
+featurecounts:
+  threads: 4
+  # Count reads in exons (default)
+  feature_type: "exon"
+  # Attribute to count (gene_id)
+  attribute_type: "gene_id"
+  # Strand specificity: 0=unstranded, 1=stranded, 2=reverse stranded
+  strand: 0
+
+# ============================================================================
+# DESEQ2 PARAMETERS
+# ============================================================================
+deseq2:
+  # Design formula (must match metadata.csv column names)
+  design: "~condition"
+  
+  # Contrast for differential expression
+  contrast:
+    - "condition"
+    - "treated"
+    - "control"
+  
+  # Significance thresholds
+  padj_threshold: 0.05
+  lfc_threshold: 1.0  # log2 fold change
+  
+  # Normalization method: "median", "geometric", "quantile"
+  normalization: "median"
+
+# ============================================================================
+# VISUALIZATION PARAMETERS
+# ============================================================================
+visualization:
+  # Volcano plot
+  volcano:
+    lfc_threshold: 1.0
+    padj_threshold: 0.05
+    point_size: 2
+    
+  # Heatmap
+  heatmap:
+    top_n_genes: 20
+    cluster_rows: true
+    cluster_cols: true
+    
+  # PCA plot
+  pca:
+    ntop: 500  # Top N most variable genes
+
+# ============================================================================
+# ENRICHMENT ANALYSIS (OPTIONAL)
+# ============================================================================
+enrichment:
+  # Gene set database
+  database: "GO"  # Options: GO, KEGG, Reactome
+  
+  # Significance threshold
+  padj_threshold: 0.05
+  
+  # Minimum gene set size
+  min_size: 5
+  max_size: 500
+
+# ============================================================================
+# COMPUTATIONAL RESOURCES
+# ============================================================================
+resources:
+  # Default number of threads
+  default_threads: 4
+  
+  # Default memory (GB)
+  default_memory: 8
+  
+  # Temporary directory
+  tmpdir: "/tmp"
+
+# ============================================================================
+# OUTPUT SETTINGS
+# ============================================================================
+output:
+  # Create compressed results archive
+  compress_results: false
+  
+  # Generate HTML report
+  generate_report: true
+  
+  # Keep intermediate files
+  keep_intermediate: false

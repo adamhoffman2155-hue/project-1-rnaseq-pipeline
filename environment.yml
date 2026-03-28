@@ -1,0 +1,48 @@
+name: rnaseq-pipeline
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  # Workflow management
+  - snakemake-minimal=7.32.4
+  - snakemake-wrappers=1.32.1
+  
+  # Alignment and quantification
+  - star=2.7.11a
+  - samtools=1.17
+  - featurecounts=2.0.3
+  
+  # Quality control
+  - fastqc=0.11.9
+  - multiqc=1.14
+  
+  # R and Bioconductor
+  - r-base=4.3.0
+  - bioconductor-deseq2=1.40.2
+  - bioconductor-biobase=2.60.0
+  - bioconductor-genomicfeatures=1.52.0
+  
+  # R packages for visualization
+  - r-ggplot2=3.4.2
+  - r-tidyverse=2.0.0
+  - r-pheatmap=1.0.12
+  - r-rcolorbrewer=1.1_3
+  
+  # Python data science
+  - python=3.11
+  - pandas=2.0.3
+  - numpy=1.24.3
+  - scipy=1.11.1
+  - scikit-learn=1.3.0
+  - matplotlib=3.7.2
+  - seaborn=0.12.2
+  - jupyter=1.0.0
+  - jupyterlab=4.0.4
+  
+  # Utilities
+  - git=2.41.0
+  - wget=1.21.3
+  - curl=8.2.1
+  - pigz=2.8
+  - parallel=20230622
