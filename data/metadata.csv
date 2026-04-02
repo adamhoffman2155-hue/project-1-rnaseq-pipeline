@@ -1,7 +1,7 @@
-sample_id,condition,replicate
-sample_1,control,1
-sample_2,control,2
-sample_3,control,3
-sample_4,treated,1
-sample_5,treated,2
-sample_6,treated,3
+sample_id,condition,replicate,fastq_r1,fastq_r2
+SRR_ctrl_1,control,1,data/fastq/SRR_ctrl_1_R1.fastq.gz,data/fastq/SRR_ctrl_1_R2.fastq.gz
+SRR_ctrl_2,control,2,data/fastq/SRR_ctrl_2_R1.fastq.gz,data/fastq/SRR_ctrl_2_R2.fastq.gz
+SRR_ctrl_3,control,3,data/fastq/SRR_ctrl_3_R1.fastq.gz,data/fastq/SRR_ctrl_3_R2.fastq.gz
+SRR_treat_1,treated,1,data/fastq/SRR_treat_1_R1.fastq.gz,data/fastq/SRR_treat_1_R2.fastq.gz
+SRR_treat_2,treated,2,data/fastq/SRR_treat_2_R1.fastq.gz,data/fastq/SRR_treat_2_R2.fastq.gz
+SRR_treat_3,treated,3,data/fastq/SRR_treat_3_R1.fastq.gz,data/fastq/SRR_treat_3_R2.fastq.gz
