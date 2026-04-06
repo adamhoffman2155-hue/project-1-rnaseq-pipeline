@@ -34,28 +34,19 @@ The pipeline surfaces DDR and mismatch-repair pathways as top candidates for che
 
 ```
 project-1-rnaseq-pipeline/
-├── Snakefile                    # Workflow definition
-├── config.yaml                  # Analysis parameters
+├── README.md
+├── Snakefile
+├── config.yaml
 ├── Dockerfile
 ├── environment.yml
-├── scripts/
-│   ├── download_reference.sh    # Genome & annotation download
-│   ├── qc.py                    # QC summary generation
-│   ├── deseq2_analysis.R        # Differential expression
-│   └── visualization.R          # Publication plots
-├── notebooks/
-│   └── analysis_walkthrough.ipynb
 ├── data/
-│   ├── raw/                     # Input FASTQ files
-│   ├── reference/               # Genome & annotation
 │   └── metadata.csv
-├── results/
-│   ├── qc/                      # QC reports
-│   ├── alignment/               # BAM files
-│   ├── counts/                  # Count matrices
-│   ├── de_analysis/             # DESeq2 results
-│   └── plots/                   # Figures
-└── logs/
+└── scripts/
+    ├── deseq2_analysis.R
+    ├── download_reference.sh
+    ├── gsea_analysis.R
+    ├── qc.py
+    └── visualization.R
 ```
 
 ## Quick Start
