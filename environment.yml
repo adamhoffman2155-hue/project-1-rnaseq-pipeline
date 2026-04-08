@@ -22,12 +22,19 @@ dependencies:
   - bioconductor-deseq2=1.40.2
   - bioconductor-biobase=2.60.0
   - bioconductor-genomicfeatures=1.52.0
+  - bioconductor-fgsea=1.26.0
+  - bioconductor-clusterprofiler=4.8.1
   
   # R packages for visualization
   - r-ggplot2=3.4.2
   - r-tidyverse=2.0.0
   - r-pheatmap=1.0.12
   - r-rcolorbrewer=1.1_3
+  - r-matrixstats=1.0.0
+  - r-msigdbr=7.5.1
+  
+  # R additional
+  - r-ashr=2.2_63
   
   # Python data science
   - python=3.11
@@ -37,8 +44,6 @@ dependencies:
   - scikit-learn=1.3.0
   - matplotlib=3.7.2
   - seaborn=0.12.2
-  - jupyter=1.0.0
-  - jupyterlab=4.0.4
   
   # Utilities
   - git=2.41.0

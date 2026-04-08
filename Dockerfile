@@ -40,9 +40,9 @@ RUN conda run -n rnaseq-pipeline \
 COPY Snakefile .
 COPY config.yaml .
 COPY scripts/ scripts/
-COPY notebooks/ notebooks/
+COPY data/ data/
 
-# Create data directories
+# Create output directories
 RUN mkdir -p data/raw data/reference results/{qc,alignment,counts,de_analysis,plots} logs
 
 # Set entrypoint
