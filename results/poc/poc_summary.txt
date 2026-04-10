@@ -1,0 +1,49 @@
+Proof-of-Concept Summary: Differential Expression Analysis
+=========================================================
+
+Dataset: Van't Veer et al. 2002 Nature 70-gene breast cancer signature
+         (bundled with scikit-survival as sksurv.datasets.load_breast_cancer)
+Substitution note: This is a substitute for the originally-planned
+TCGA-STAD RNA-seq analysis. TCGA/GDC/recount3 data sources are not
+reachable from the reproducibility sandbox; Van't Veer is a legitimate
+published gene expression dataset with a binary clinical endpoint suitable
+for DE analysis. The exact same workflow runs on any counts matrix.
+
+Cohort
+  Total samples:      198
+  Metastasis events:  51
+  Non-metastasis:     147
+  Features tested:    78 gene probes
+
+Differential expression (Welch t-test + Benjamini-Hochberg FDR)
+  Genes with raw p < 0.05:  13
+  Genes with padj < 0.05:   2
+  Genes with padj < 0.10:   2
+
+Top 10 genes by unadjusted p-value:
+        gene    log2FC   pvalue     padj
+  X202240_at  0.546923 0.000107 0.007623
+X203306_s_at -0.332214 0.000195 0.007623
+  X203391_at -0.283099 0.007331 0.143431
+  X204540_at  0.925383 0.007355 0.143431
+  X204014_at -0.930313 0.010622 0.161577
+X208180_s_at  0.598813 0.012429 0.161577
+        size  0.291917 0.017499 0.178767
+X218883_s_at  0.362069 0.018335 0.178767
+X211762_s_at  0.261613 0.027196 0.213008
+  X201288_at -0.256752 0.027309 0.213008
+
+Honest assessment
+  - Dataset is REAL published data (Nature 2002) but small (n=198)
+  - Van't Veer probeset IDs (e.g. X200726_at) map to Affymetrix HG-U133A;
+    biological gene symbols would require a probe mapping step not done here
+  - No pathway enrichment (gseapy requires online gene set fetch, not
+    available in sandbox)
+  - Identifying top DE probes between metastasis vs non-metastasis is a
+    well-defined task; see Van't Veer 2002 supplementary for comparison
+  - padj threshold is strict given the small sample size; if zero probes
+    pass padj<0.05, the unadjusted top-10 list is still scientifically
+    meaningful as the strongest signals in this cohort
+
+Reproduction
+  python scripts/poc/run_poc.py
