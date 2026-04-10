@@ -1,7 +1,5 @@
-"""
-RNA-seq Differential Expression Analysis Pipeline
-Snakemake workflow for processing raw FASTQ to DE results
-"""
+# RNA-seq Differential Expression Analysis Pipeline
+# Snakemake workflow for processing raw FASTQ to DE results + GSEA
 
 import os
 import pandas as pd
@@ -26,22 +24,27 @@ rule all:
         # Quality control
         expand("results/qc/fastqc/{sample}_R1_fastqc.html", sample=SAMPLES),
         "results/qc/multiqc_report.html",
-        
+        "results/qc/qc_summary.csv",
+
         # Alignment
         expand("results/alignment/{sample}.bam", sample=SAMPLES),
         expand("results/alignment/{sample}.bam.bai", sample=SAMPLES),
-        
+
         # Quantification
         "results/counts/gene_counts.txt",
-        
+
         # Differential expression
         "results/de_analysis/deseq2_results.csv",
-        
+
         # Visualization
         "results/plots/volcano_plot.pdf",
         "results/plots/ma_plot.pdf",
         "results/plots/heatmap_top_genes.pdf",
-        "results/plots/pca_plot.pdf"
+        "results/plots/pca_plot.pdf",
+
+        # Pathway enrichment (GSEA)
+        "results/enrichment/enrichment_results.csv",
+        "results/enrichment/gsea_barplot.pdf"
 
 # ============================================================================
 # QUALITY CONTROL
@@ -75,6 +78,19 @@ rule multiqc:
         multiqc results/qc/fastqc/ -o results/qc/ -n multiqc_report 2> {log}
         """
 
+rule qc_summary:
+    """Aggregate FastQC metrics into a pass/fail summary table"""
+    input:
+        expand("results/qc/fastqc/{sample}_R1_fastqc.zip", sample=SAMPLES)
+    output:
+        summary="results/qc/qc_summary.csv"
+    log:
+        "logs/qc_summary.log"
+    shell:
+        """
+        python scripts/qc.py results/qc/fastqc {output.summary} 2> {log}
+        """
+
 # ============================================================================
 # ALIGNMENT
 # ============================================================================
@@ -91,19 +107,19 @@ rule star_align:
         "logs/align_{sample}.log"
     threads: config["star"]["threads"]
     resources:
-        mem_mb=config["star"]["memory"]
+        mem_mb=lambda wildcards, attempt: config["star"]["memory"] * 1024 * attempt
     shell:
         """
-        STAR \
-            --genomeDir {input.genome_dir} \
-            --readFilesIn {input.fq} \
-            --readFilesCommand zcat \
-            --outFileNamePrefix results/alignment/{wildcards.sample}_ \
-            --outSAMtype BAM SortedByCoordinate \
-            --runThreadN {threads} \
-            --outBAMsortingThreadN {threads} \
+        STAR \\
+            --genomeDir {input.genome_dir} \\
+            --readFilesIn {input.fq} \\
+            --readFilesCommand zcat \\
+            --outFileNamePrefix results/alignment/{wildcards.sample}_ \\
+            --outSAMtype BAM SortedByCoordinate \\
+            --runThreadN {threads} \\
+            --outBAMsortingThreadN {threads} \\
             2> {log}
-        
+
         # Rename output BAM
         mv results/alignment/{wildcards.sample}_Aligned.sortedByCoord.out.bam {output.bam}
         """
@@ -136,14 +152,17 @@ rule featurecounts:
         summary="results/counts/gene_counts.txt.summary"
     log:
         "logs/featurecounts.log"
-    threads: 4
+    threads: config["featurecounts"]["threads"]
+    params:
+        strand=config["featurecounts"]["strand"]
     shell:
         """
-        featureCounts \
-            -T {threads} \
-            -a {input.gtf} \
-            -o {output.counts} \
-            {input.bams} \
+        featureCounts \\
+            -T {threads} \\
+            -s {params.strand} \\
+            -a {input.gtf} \\
+            -o {output.counts} \\
+            {input.bams} \\
             2> {log}
         """
 
@@ -213,6 +232,26 @@ rule pca_plot:
         "logs/pca_plot.log"
     script:
         "scripts/visualization.R"
+
+# ============================================================================
+# PATHWAY ENRICHMENT (GSEA)
+# ============================================================================
+
+rule gsea:
+    """Gene Set Enrichment Analysis on DESeq2 results"""
+    input:
+        results="results/de_analysis/deseq2_results.csv"
+    output:
+        enrichment="results/enrichment/enrichment_results.csv",
+        barplot="results/enrichment/gsea_barplot.pdf"
+    log:
+        "logs/gsea.log"
+    params:
+        output_dir="results/enrichment"
+    shell:
+        """
+        Rscript scripts/gsea_analysis.R {input.results} {params.output_dir} 2> {log}
+        """
 
 # ============================================================================
 # UTILITY RULES
