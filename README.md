@@ -4,6 +4,16 @@
 
 This is the first project in a [computational biology portfolio](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) built to develop practical fluency in bioinformatics workflows. It grew directly from my M.Sc. thesis at McGill, where I studied chemotherapy response in MSI-high GEA patients and needed a way to identify the transcriptomic signatures behind treatment resistance.
 
+## At a Glance
+
+| | |
+|---|---|
+| **Stack** | Snakemake · STAR · featureCounts · DESeq2 · fgsea · Docker |
+| **Data** | TCGA-STAD (target); Van't Veer 2002 breast n=198 (POC substitute) |
+| **POC headline** | 34 probes BH padj<0.05; single-sample ER signature AUC 0.87 |
+| **Role** | Biological framing and DE interpretation; implementation AI-assisted |
+| **Portfolio** | Project 1 of 7 · [full narrative](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) |
+
 ## What It Does
 
 End-to-end bulk RNA-seq pipeline using TCGA-STAD expression data:
