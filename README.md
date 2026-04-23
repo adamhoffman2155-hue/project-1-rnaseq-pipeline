@@ -1,8 +1,20 @@
 # Project 1: RNA-seq Differential Expression Pipeline
 
-**Research question:** Which transcriptomic programs drive chemotherapy resistance in gastroesophageal adenocarcinoma?
+> **A pipeline that finds which genes are "turned up" or "turned down" when cancer patients resist chemotherapy.**
 
-This is the first project in a [computational biology portfolio](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) built to develop practical fluency in bioinformatics workflows. It grew directly from my M.Sc. thesis at McGill, where I studied chemotherapy response in MSI-high GEA patients and needed a way to identify the transcriptomic signatures behind treatment resistance.
+## The short version
+
+**What this project does.** Builds a reproducible workflow that takes raw RNA-sequencing data and finds genes whose activity differs between two groups of patients (for example, responders vs. non-responders to chemo).
+
+**The question behind it.** Some stomach/esophageal cancer patients don't respond to standard chemotherapy. Is there a genetic fingerprint we can read from their tumors that would flag who will resist? To answer that honestly, you first need a pipeline that is actually reproducible — meaning someone else can re-run it and get the same numbers.
+
+**What the proof-of-concept shows.** Because real patient RNA-seq data from TCGA isn't accessible from the reproducibility sandbox, the POC runs the same statistical workflow on a well-known 1998 breast-cancer dataset (Van't Veer, n=198, 78 genes). It correctly finds **34 genes** whose activity differs between ER-positive and ER-negative tumors (top hit: p = 1.7 × 10⁻¹²), and a 20-gene signature separates ER status with **0.87 AUC** (training-fold; see honesty note below).
+
+**Why it matters.** If the same approach finds robust signatures in GEA patients, clinicians could potentially identify chemo-resistant tumors before treatment and avoid putting those patients through ineffective therapy.
+
+---
+
+_The rest of this README is technical detail for bioinformaticians, recruiters doing a deep review, or anyone reproducing the work._
 
 ## At a Glance
 
