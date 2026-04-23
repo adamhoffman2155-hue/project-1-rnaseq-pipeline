@@ -1,5 +1,7 @@
 # Project 1: RNA-seq Differential Expression Pipeline
 
+[![CI](https://github.com/adamhoffman2155-hue/project-1-rnaseq-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/adamhoffman2155-hue/project-1-rnaseq-pipeline/actions/workflows/ci.yml)
+
 **Research question:** Which transcriptomic programs drive chemotherapy resistance in gastroesophageal adenocarcinoma?
 
 This is the first project in a [computational biology portfolio](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) built to develop practical fluency in bioinformatics workflows. It grew directly from my M.Sc. thesis at McGill, where I studied chemotherapy response in MSI-high GEA patients and needed a way to identify the transcriptomic signatures behind treatment resistance.
@@ -14,7 +16,7 @@ End-to-end bulk RNA-seq pipeline using TCGA-STAD expression data:
 4. **Quantification** — featureCounts for gene-level counts
 5. **Differential expression** — DESeq2 normalization and statistical testing
 6. **Visualization** — volcano, MA, PCA, and heatmap plots of top DE genes
-7. **Pathway enrichment** — `scripts/gsea_analysis.R` runs fgsea over MSigDB Hallmark + KEGG gene sets as a standalone post-analysis step (not currently part of `rule all`)
+7. **Pathway enrichment** — `scripts/gsea_analysis.R` runs fgsea over MSigDB Hallmark + KEGG gene sets, wired into `rule all` via the `gsea_analysis` rule
 
 The pipeline surfaces DDR and mismatch-repair pathways as top candidates for chemotherapy response signatures in GEA — consistent with known biology and directly motivating Projects 3 and 4.
 
@@ -35,18 +37,21 @@ The pipeline surfaces DDR and mismatch-repair pathways as top candidates for che
 
 ```
 project-1-rnaseq-pipeline/
-├── Snakefile                    # fastqc → align → index → count → DE → plots
-├── config.yaml                  # STAR, reference, metadata paths
+├── Snakefile                         # fastqc → align → count → DE → plots → GSEA
+├── config.yaml                       # STAR, reference, metadata paths
 ├── Dockerfile
 ├── environment.yml
 ├── scripts/
-│   ├── download_reference.sh    # Genome & annotation download
-│   ├── qc.py                    # QC summary generation
-│   ├── deseq2_analysis.R        # DESeq2 DE (Snakemake script rule)
-│   ├── visualization.R          # Volcano / MA / heatmap / PCA
-│   └── gsea_analysis.R          # fgsea (standalone CLI post-analysis)
+│   ├── download_reference.sh         # Genome & annotation download
+│   ├── generate_synthetic_counts.py  # Seed results/counts for fresh-clone smoke run
+│   ├── qc.py                         # QC summary generation
+│   ├── deseq2_analysis.R             # DESeq2 DE (Snakemake script rule)
+│   ├── visualization.R               # Volcano / MA / heatmap / PCA
+│   └── gsea_analysis.R               # fgsea (Snakemake rule + standalone CLI)
+├── tests/
+│   └── test_pipeline.py              # Python-side smoke tests (metadata, config, fixture)
 ├── data/
-│   └── metadata.csv             # Sample sheet (raw FASTQ + reference gitignored)
+│   └── metadata.csv                  # Sample sheet (raw FASTQ + reference gitignored)
 └── .gitignore
 ```
 
@@ -65,12 +70,27 @@ docker run -it -v $(pwd):/workspace rnaseq-pipeline bash
 # Or Conda
 conda env create -f environment.yml
 conda activate rnaseq-pipeline
+```
 
-# Run pipeline (alignment → DE → plots)
-snakemake --cores 4
+**End-to-end run on real data** (requires FASTQ + reference — see `scripts/download_reference.sh`):
 
-# Optional: pathway enrichment post-analysis
-Rscript scripts/gsea_analysis.R results/de_analysis/deseq2_results.csv results/enrichment/
+```bash
+snakemake --cores 4     # fastqc → align → count → DE → plots → GSEA
+```
+
+**Smoke test on a fresh clone** (no FASTQ, no STAR, no reference — seeds a
+synthetic featureCounts matrix with planted DE signal so the downstream
+DESeq2 / visualization / GSEA stages are exercised):
+
+```bash
+# Python-side smoke tests (metadata, config, synthetic fixture)
+pytest tests/
+
+# Seed counts (not a Snakemake rule — just a plain script that writes
+# results/counts/gene_counts.txt where rule featurecounts would normally
+# put it), then run DE + plots + GSEA.
+python scripts/generate_synthetic_counts.py
+snakemake deseq2_analysis volcano_plot ma_plot heatmap pca_plot gsea_analysis --cores 2
 ```
 
 ## My Role

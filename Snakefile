@@ -41,7 +41,11 @@ rule all:
         "results/plots/volcano_plot.pdf",
         "results/plots/ma_plot.pdf",
         "results/plots/heatmap_top_genes.pdf",
-        "results/plots/pca_plot.pdf"
+        "results/plots/pca_plot.pdf",
+
+        # Pathway enrichment
+        "results/gsea/enrichment_results.csv",
+        "results/gsea/gsea_barplot.pdf"
 
 # ============================================================================
 # QUALITY CONTROL
@@ -213,6 +217,24 @@ rule pca_plot:
         "logs/pca_plot.log"
     script:
         "scripts/visualization.R"
+
+# ============================================================================
+# PATHWAY ENRICHMENT
+# ============================================================================
+
+rule gsea_analysis:
+    """Gene Set Enrichment Analysis on DESeq2 results via fgsea"""
+    input:
+        results="results/de_analysis/deseq2_results.csv"
+    output:
+        csv="results/gsea/enrichment_results.csv",
+        plot="results/gsea/gsea_barplot.pdf"
+    log:
+        "logs/gsea.log"
+    shell:
+        """
+        Rscript scripts/gsea_analysis.R {input.results} results/gsea/ 2> {log}
+        """
 
 # ============================================================================
 # UTILITY RULES
