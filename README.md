@@ -1,5 +1,7 @@
 # Project 1: RNA-seq Differential Expression Pipeline
 
+> **Branch status:** This repo currently has two active branches — `master` (this one) and `main` — that have diverged independently and now contain different Snakefile, Dockerfile, and scripts revisions. The READMEs here describe the `master` variant. Treat either branch as authoritative only once they have been consolidated.
+
 **Research question:** Which transcriptomic programs drive chemotherapy resistance in gastroesophageal adenocarcinoma?
 
 This is the first project in a [computational biology portfolio](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) built to develop practical fluency in bioinformatics workflows. It grew directly from my M.Sc. thesis at McGill, where I studied chemotherapy response in MSI-high GEA patients and needed a way to identify the transcriptomic signatures behind treatment resistance.
