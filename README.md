@@ -8,12 +8,13 @@ This is the first project in a [computational biology portfolio](https://github.
 
 End-to-end bulk RNA-seq pipeline using TCGA-STAD expression data:
 
-1. **Read alignment** — STAR aligner to GRCh38 reference genome
-2. **Quantification** — featureCounts for gene-level counts
-3. **Quality control** — FastQC + MultiQC reporting
-4. **Differential expression** — DESeq2 normalization and statistical testing
-5. **Visualization** — Volcano plots, MA plots, heatmaps of top DE genes
-6. **Pathway enrichment** — GSEA/fgsea for biological interpretation
+1. **Quality control** — FastQC per-sample + MultiQC aggregate report
+2. **Read alignment** — STAR aligner to GRCh38 (single-end reads wired in the Snakefile)
+3. **Indexing** — SAMtools index on sorted BAMs
+4. **Quantification** — featureCounts for gene-level counts
+5. **Differential expression** — DESeq2 normalization and statistical testing
+6. **Visualization** — volcano, MA, PCA, and heatmap plots of top DE genes
+7. **Pathway enrichment** — `scripts/gsea_analysis.R` runs fgsea over MSigDB Hallmark + KEGG gene sets as a standalone post-analysis step (not currently part of `rule all`)
 
 The pipeline surfaces DDR and mismatch-repair pathways as top candidates for chemotherapy response signatures in GEA — consistent with known biology and directly motivating Projects 3 and 4.
 
@@ -25,8 +26,8 @@ The pipeline surfaces DDR and mismatch-repair pathways as top candidates for che
 | Quantification | featureCounts |
 | QC | FastQC, MultiQC, SAMtools |
 | DE Analysis | DESeq2 (R) |
-| Visualization | ggplot2, ComplexHeatmap |
-| Enrichment | fgsea / clusterProfiler |
+| Visualization | ggplot2 (volcano / MA / PCA / heatmap) |
+| Enrichment | fgsea + MSigDB Hallmark / KEGG |
 | Workflow | Snakemake |
 | Environment | Docker, Conda |
 
@@ -34,29 +35,22 @@ The pipeline surfaces DDR and mismatch-repair pathways as top candidates for che
 
 ```
 project-1-rnaseq-pipeline/
-├── Snakefile                    # Workflow definition
-├── config.yaml                  # Analysis parameters
+├── Snakefile                    # fastqc → align → index → count → DE → plots
+├── config.yaml                  # STAR, reference, metadata paths
 ├── Dockerfile
 ├── environment.yml
 ├── scripts/
 │   ├── download_reference.sh    # Genome & annotation download
 │   ├── qc.py                    # QC summary generation
-│   ├── deseq2_analysis.R        # Differential expression
-│   └── visualization.R          # Publication plots
-├── notebooks/
-│   └── analysis_walkthrough.ipynb
+│   ├── deseq2_analysis.R        # DESeq2 DE (Snakemake script rule)
+│   ├── visualization.R          # Volcano / MA / heatmap / PCA
+│   └── gsea_analysis.R          # fgsea (standalone CLI post-analysis)
 ├── data/
-│   ├── raw/                     # Input FASTQ files
-│   ├── reference/               # Genome & annotation
-│   └── metadata.csv
-├── results/
-│   ├── qc/                      # QC reports
-│   ├── alignment/               # BAM files
-│   ├── counts/                  # Count matrices
-│   ├── de_analysis/             # DESeq2 results
-│   └── plots/                   # Figures
-└── logs/
+│   └── metadata.csv             # Sample sheet (raw FASTQ + reference gitignored)
+└── .gitignore
 ```
+
+Pipeline outputs (QC reports, BAM files, count matrices, DESeq2 tables, figures, logs) are written under `results/` and `logs/` at runtime and are gitignored.
 
 ## Quick Start
 
@@ -72,8 +66,11 @@ docker run -it -v $(pwd):/workspace rnaseq-pipeline bash
 conda env create -f environment.yml
 conda activate rnaseq-pipeline
 
-# Run pipeline
+# Run pipeline (alignment → DE → plots)
 snakemake --cores 4
+
+# Optional: pathway enrichment post-analysis
+Rscript scripts/gsea_analysis.R results/de_analysis/deseq2_results.csv results/enrichment/
 ```
 
 ## My Role
