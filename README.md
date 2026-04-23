@@ -72,11 +72,24 @@ conda env create -f environment.yml
 conda activate rnaseq-pipeline
 ```
 
-**End-to-end run on real data** (requires FASTQ + reference — see `scripts/download_reference.sh`):
+**End-to-end run on real data** (requires ~20 GB disk, network, and a
+machine with at least 30 GB RAM for the STAR step):
 
 ```bash
+# 1. Fetch a 6-sample SRA subset (~3-5 GB of FASTQ.gz via ENA).
+#    Override SRR_ACCS env var to use a different study.
+scripts/fetch_sra_subset.sh
+
+# 2. Download GRCh38 + GENCODE GTF and build the STAR index.
+scripts/download_reference.sh
+
+# 3. Verify data/metadata.csv sample_id values match the SRR accessions
+#    fetched in step 1, then run the full DAG.
 snakemake --cores 4     # fastqc → align → count → DE → plots → GSEA
 ```
+
+The Snakemake DAG is wired end-to-end (STAR → featureCounts → DESeq2 →
+volcano/MA/heatmap/PCA → fgsea); `rule all` targets every figure.
 
 **Smoke test on a fresh clone** (no FASTQ, no STAR, no reference — seeds a
 synthetic featureCounts matrix with planted DE signal so the downstream
