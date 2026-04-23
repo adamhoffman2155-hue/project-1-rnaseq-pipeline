@@ -42,21 +42,14 @@ project-1-rnaseq-pipeline/
 │   ├── download_reference.sh    # Genome & annotation download
 │   ├── qc.py                    # QC summary generation
 │   ├── deseq2_analysis.R        # Differential expression
+│   ├── gsea_analysis.R          # fgsea pathway enrichment
 │   └── visualization.R          # Publication plots
-├── notebooks/
-│   └── analysis_walkthrough.ipynb
 ├── data/
-│   ├── raw/                     # Input FASTQ files
-│   ├── reference/               # Genome & annotation
-│   └── metadata.csv
-├── results/
-│   ├── qc/                      # QC reports
-│   ├── alignment/               # BAM files
-│   ├── counts/                  # Count matrices
-│   ├── de_analysis/             # DESeq2 results
-│   └── plots/                   # Figures
-└── logs/
+│   └── metadata.csv             # Sample sheet (raw FASTQ + reference gitignored)
+└── .gitignore
 ```
+
+Pipeline outputs (QC reports, BAM files, count matrices, DESeq2 tables, figures, logs) are written under `results/` and `logs/` at runtime and are gitignored.
 
 ## Quick Start
 
