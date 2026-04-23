@@ -8,9 +8,10 @@ This is the first project in a [computational biology portfolio](https://github.
 
 | | |
 |---|---|
-| **Stack** | Snakemake · STAR · featureCounts · DESeq2 · fgsea · Docker |
-| **Data** | TCGA-STAD (target); Van't Veer 2002 breast n=198 (POC substitute) |
-| **POC headline** | Welch-t + BH-FDR over 78 probes; 2 probes padj<0.05 (X202240_at top, p=1.1e-4) |
+| **Stack** | Snakemake · STAR · featureCounts · DESeq2 · fgsea · Docker (full pipeline); scipy + matplotlib (POC) |
+| **Data** | TCGA-STAD (full-pipeline target); Van't Veer 2002 breast cancer n=198, 78 probes (POC substitute) |
+| **POC headline** | ER+ vs ER- DE: 34 probes BH padj<0.05 (15 at padj<0.001, top p=1.7e-12); 20-probe ER signature MW-AUC 0.868 (training-fold) |
+| **Status** | Full pipeline: **Full-data target** (no FASTQ committed). POC: **Runnable POC** (reproducible with one pip install) |
 | **Role** | Biological framing and DE interpretation; implementation AI-assisted |
 | **Portfolio** | Project 1 of 7 · [full narrative](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) |
 
@@ -75,40 +76,74 @@ docker run -it -v $(pwd):/workspace rnaseq-pipeline bash
 conda env create -f environment.yml
 conda activate rnaseq-pipeline
 
-# Run pipeline
+# Run pipeline (requires FASTQ files in data/raw/)
 snakemake --cores 4
 ```
 
-## Proof of Concept
+## Proof of Concept (v2)
 
-A minimal end-to-end differential expression run on a real, published gene expression dataset so reviewers can verify the statistical workflow without a TCGA download.
+A lightweight, reproducible DE + pathway-scoring run on a real, published gene-expression dataset — so reviewers can verify the statistical pipeline without running the full alignment/quantification stack.
 
-**Dataset:** Van't Veer et al. 2002, *Nature* 415:530 — 70-gene breast cancer prognostic signature (198 samples, 78 gene probes, distant-metastasis endpoint). Accessed via `sksurv.datasets.load_breast_cancer()` so no network or account is required.
+**Dataset:** Van't Veer et al. 2002, *Nature* 415:530 — 198 breast cancer patients, 78 gene probes, ER status, grade, metastasis endpoint. Accessed via `sksurv.datasets.load_breast_cancer()` so **no network or account is required**.
 
-**Substitution note:** The full Snakemake pipeline targets TCGA-STAD counts from recount3/GDC, but those hosts are not reachable from this reproducibility sandbox. Van't Veer 2002 is a legitimate substitute: a peer-reviewed published gene-expression dataset with a binary clinical endpoint suitable for a two-class DE test. The same Welch-t + BH-FDR code runs unchanged on any counts matrix.
+**Substitution note:** The full Snakemake pipeline targets TCGA-STAD counts (recount3 / GDC), but those hosts aren't reachable from the reproducibility sandbox. The Van't Veer 2002 cohort is a landmark published gene-expression dataset, and the Welch-t + BH-FDR + signature-score code runs unchanged on any expression matrix.
 
-**What the POC tests:**
-- Per-gene Welch t-test between metastasis and non-metastasis patients
-- Benjamini-Hochberg FDR correction across all 78 probes
-- Volcano plot + top DE table
+### What the POC runs
 
-**Headline numbers** (actual run output):
-- Samples: 198 (51 metastasis events, 147 non-metastasis)
-- Probes with raw p < 0.05: **13**
-- Probes passing BH padj < 0.05: **2** (X202240_at, X203306_s_at)
-- Top gene X202240_at: log2FC = +0.55, p = 1.1e-4, padj = 7.6e-3
+1. **Contrast 1 — ER+ (n=134) vs ER- (n=64):** Welch t-test per probe, Benjamini–Hochberg FDR
+2. **Contrast 2 — poorly (n=83) vs well-differentiated (n=30) grade:** same test
+3. **Pathway signature scoring:** 10 top-up + 10 top-down DEG probes become a "ER signature" score, evaluated on each sample
+4. **Sanity check:** Mann-Whitney U / Welch t on signature score between ER+ and ER- (training-fold AUC)
 
-**Limits:**
-- Van't Veer probeset IDs are Affymetrix HG-U133A; biological gene symbols require a probe-to-gene mapping step not performed here
-- No pathway enrichment in the POC (gseapy requires online gene-set fetch)
-- Small sample size yields only 2 probes significant after multiple-testing correction; the ranked list is the primary POC artifact
+### Headline numbers (actual committed outputs in `results/poc/`)
 
-**Reproduction:**
+**ER+ vs ER-:**
+
+| Threshold | N significant probes |
+|---|---|
+| raw p < 0.05 | 39 |
+| BH padj < 0.05 | **34** |
+| BH padj < 0.01 | 23 |
+| BH padj < 0.001 | 15 |
+| Strongest p | 1.74e-12 |
+
+Top 5 probes by padj: X214919_s_at, X202240_at, X211762_s_at, X204540_at, X211040_x_at.
+
+**Grade (poor vs well-differentiated):**
+
+| Threshold | N significant probes |
+|---|---|
+| BH padj < 0.05 | 23 |
+| BH padj < 0.01 | 17 |
+
+**20-probe ER signature scoring:**
+
+| Metric | Value |
+|---|---|
+| Mann-Whitney U AUC | **0.868** |
+| Welch t-statistic | 10.49 |
+| p-value | 6.16e-17 |
+
+### Reproduce
+
 ```bash
 pip install scikit-survival pandas numpy scipy matplotlib
 python scripts/poc/run_poc.py
 ```
-Outputs are written to `results/poc/` (CSV tables, summary text, volcano PNG).
+
+Outputs land in `results/poc/`:
+- `de_er.csv`, `de_grade.csv` — full DE tables
+- `top_de_er.csv` — top-10 by padj
+- `pathway_scores.csv` — per-sample signature score
+- `volcano_er.png`, `volcano_grade.png`, `er_score_separation.png`
+- `poc_summary.txt` — full run log
+
+### Honest assessment
+
+- Van't Veer is real published gene expression but small (n=198, 78 probes). ER+/ER- is a strong contrast in breast cancer; 34 significant probes is expected.
+- **The ER signature AUC of 0.868 is training-fold only** — the signature was derived from the same samples it was scored on. This is a pipeline-validation sanity check, not a held-out classifier result.
+- No external gene sets (Hallmark / KEGG / GO) are used in the POC; MSigDB/Enrichr are unreachable from the sandbox.
+- The POC validates the statistical pipeline, not GEA biology. The full Snakemake target (TCGA-STAD) is where GEA-specific signatures would be surfaced.
 
 ## My Role
 
