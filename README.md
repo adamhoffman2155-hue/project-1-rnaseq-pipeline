@@ -1,6 +1,9 @@
 # Project 1: RNA-seq Differential Expression Pipeline
 
-> **Branch status:** This repo currently has two active branches — `master` (this one) and `main` — that have diverged independently and now contain different Snakefile, Dockerfile, and scripts revisions. The READMEs here describe the `master` variant. Treat either branch as authoritative only once they have been consolidated.
+![CI](https://github.com/adamhoffman2155-hue/project-1-rnaseq-pipeline/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Repro](https://img.shields.io/badge/FAIR_DOME_CURE-11%2F14_%7C_N%2FA_%7C_4%2F4-brightgreen)
 
 **Research question:** Which transcriptomic programs drive chemotherapy resistance in gastroesophageal adenocarcinoma?
 
@@ -82,6 +85,40 @@ I defined the biological question based on my thesis work, selected the TCGA-STA
 ## Context in the Portfolio
 
 This is **Project 1 of 7** in a portfolio that follows a single clinical question from transcriptomics through single-cell analysis, pharmacogenomics, biomarker discovery, phenomics, survival modeling, and software engineering. See the [portfolio site](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) for the full narrative.
+
+### Cross-project data flow
+
+```
+Project 1 (this one — bulk RNA-seq DE + GSEA)
+        │   DEGs, pathway scores
+        ▼
+┌───────────────┬───────────────┬───────────────┐
+│ Project 3     │ Project 4     │ Project 6     │
+│ (drug ML      │ (DDR biomarkers│ (survival     │
+│  features)    │  pathway ctx) │  covariates)  │
+└───────────────┴───────────────┴───────────────┘
+```
+
+- **Upstream** — TCGA-STAD FASTQs / pre-aligned BAMs (external).
+- **Downstream** — gene-level counts and DE tables feed candidate ML features in P3, pathway context for P4's DDR biomarker interpretation, and transcriptomic covariates for P6's Cox survival model (narrative input).
+
+## Benchmarks
+
+| Benchmark | Script | Summary |
+| --- | --- | --- |
+| DESeq2 vs limma-voom | [`scripts/benchmark_deseq2_vs_limma.R`](scripts/benchmark_deseq2_vs_limma.R) | Runs both tools on the same count matrix and writes per-gene padj/log2FC plus concordance columns. Industry-standard DE-tool sanity check (nf-core/rnaseq reports > 85% inter-tool concordance). |
+
+Run locally:
+
+```
+Rscript scripts/benchmark_deseq2_vs_limma.R --help
+```
+
+See [`results/benchmark/README.md`](results/benchmark/README.md) for usage.
+
+## Reproducibility
+
+See [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) for the FAIR-BioRS / CURE self-scorecard (11/14 · N/A · 4/4). DOME is not applicable here (statistical pipeline, not supervised ML).
 
 ## License
 
