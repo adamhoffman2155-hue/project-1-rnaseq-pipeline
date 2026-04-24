@@ -39,7 +39,7 @@ def parse_fastqc_data(fastqc_path: str) -> dict:
         "sequence_length": "",
     }
 
-    with open(fastqc_path, "r") as fh:
+    with open(fastqc_path) as fh:
         for line in fh:
             line = line.strip()
             if line.startswith("Filename"):
