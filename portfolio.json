@@ -1,0 +1,37 @@
+{
+  "id": 1,
+  "title": "RNA-seq Differential Expression Pipeline",
+  "question": "Which transcriptomic programs drive chemotherapy resistance in GEA?",
+  "stack": ["Snakemake", "STAR", "featureCounts", "DESeq2", "fgsea", "Docker"],
+  "dataset_target": "TCGA-STAD via recount3 / GDC (RNA-seq counts + clinical)",
+  "dataset_actual_poc": "Van't Veer et al. 2002 Nature 415:530, n=198, 78 probes, via sksurv.datasets.load_breast_cancer",
+  "substitution_reason": "TCGA-STAD via recount3/GDC not reachable from reproducibility sandbox",
+  "status": "Runnable POC; full pipeline is a target that needs TCGA access",
+  "reproduce_command": "pip install scikit-survival pandas numpy scipy matplotlib && python scripts/poc/run_poc.py",
+  "outputs": [
+    "results/poc/de_results.csv",
+    "results/poc/top_de_er.csv",
+    "results/poc/top_de_genes.csv",
+    "results/poc/poc_summary.txt"
+  ],
+  "headline_result": {
+    "primary_contrast": "ER+ (n=134) vs ER- (n=64)",
+    "n_probes_padj_0.05": 34,
+    "n_probes_padj_0.001": 15,
+    "strongest_p": "1.7e-12",
+    "secondary_contrast": "poorly (n=83) vs well-differentiated (n=30) tumour grade",
+    "n_grade_padj_0.05": 23,
+    "er_signature_mw_auc": 0.868,
+    "er_signature_caveat": "Training-fold validation of pipeline; signature derived from same samples it scores"
+  },
+  "limitations": [
+    "POC is breast cancer (Van't Veer), not GEA — pipeline validation only",
+    "Small N and probe count (198 samples, 78 probes)",
+    "ER signature AUC is training-fold, not held-out",
+    "No external pathway databases used (MSigDB / Enrichr unreachable)",
+    "Full TCGA-STAD pipeline cannot be run in the sandbox"
+  ],
+  "feeds_into": ["project-3-ml-classification", "project-6-gea-survival-pipeline"],
+  "portfolio_position": "Project 1 of 7",
+  "role": "Biological framing, dataset selection, DEG plausibility review against known GEA biology. Implementation AI-assisted."
+}
