@@ -5,6 +5,8 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Repro](https://img.shields.io/badge/FAIR_DOME_CURE-11%2F14_%7C_N%2FA_%7C_4%2F4-brightgreen)
 
+> **Branch status:** `main` holds the Van't Veer 2002 POC (ER+/ER- DE, committed in `results/poc/`); this feature branch `claude/research-industry-standards-bQAWX` adds uniform polish (CI, pre-commit, REPRODUCIBILITY.md, benchmarks, cross-project docs) but is intentionally based on `master` (pre-POC). The intended path is to merge this feature branch's polish layer into `main` — the two branches are not independently authoritative, they are additive.
+
 **Research question:** Which transcriptomic programs drive chemotherapy resistance in gastroesophageal adenocarcinoma?
 
 This is the first project in a [computational biology portfolio](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) built to develop practical fluency in bioinformatics workflows. It grew directly from my M.Sc. thesis at McGill, where I studied chemotherapy response in MSI-high GEA patients and needed a way to identify the transcriptomic signatures behind treatment resistance.
