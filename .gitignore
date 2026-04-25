@@ -4,8 +4,9 @@ data/raw/*.fastq
 data/reference/
 !data/metadata.csv
 
-# Results
-results/
+# Results (whitelist committed benchmark subdir)
+results/*
+!results/benchmark/
 .snakemake/
 
 # Logs

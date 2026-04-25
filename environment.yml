@@ -20,10 +20,13 @@ dependencies:
   # R and Bioconductor
   - r-base=4.3.0
   - bioconductor-deseq2=1.40.2
+  - bioconductor-limma=3.56.0
+  - bioconductor-edger=3.42.4
   - bioconductor-biobase=2.60.0
   - bioconductor-genomicfeatures=1.52.0
   - bioconductor-fgsea=1.26.0
   - bioconductor-clusterprofiler=4.8.1
+  - r-optparse=1.7.3
   
   # R packages for visualization
   - r-ggplot2=3.4.2

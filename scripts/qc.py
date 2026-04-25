@@ -39,7 +39,7 @@ def parse_fastqc_data(fastqc_path: str) -> dict:
         "sequence_length": "",
     }
 
-    with open(fastqc_path, "r") as fh:
+    with open(fastqc_path) as fh:
         for line in fh:
             line = line.strip()
             if line.startswith("Filename"):
@@ -106,15 +106,13 @@ def main():
 
     # Find all FastQC output folders
     qc_dirs = sorted(
-        p for p in Path(fastqc_dir).iterdir()
-        if p.is_dir() and p.name.endswith("_fastqc")
+        p for p in Path(fastqc_dir).iterdir() if p.is_dir() and p.name.endswith("_fastqc")
     )
 
     if not qc_dirs:
         print("Warning: no *_fastqc/ directories found, checking for zip files")
         qc_dirs = sorted(
-            Path(str(p).replace(".zip", ""))
-            for p in Path(fastqc_dir).glob("*_fastqc.zip")
+            Path(str(p).replace(".zip", "")) for p in Path(fastqc_dir).glob("*_fastqc.zip")
         )
 
     results = []
@@ -129,8 +127,12 @@ def main():
 
     # Write summary CSV
     fieldnames = [
-        "sample", "total_sequences", "sequence_length",
-        "percent_gc", "percent_duplicates", "qc_flag",
+        "sample",
+        "total_sequences",
+        "sequence_length",
+        "percent_gc",
+        "percent_duplicates",
+        "qc_flag",
     ]
 
     os.makedirs(os.path.dirname(output_csv) or ".", exist_ok=True)

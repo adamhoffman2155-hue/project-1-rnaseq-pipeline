@@ -1,6 +1,9 @@
 # Project 1: RNA-seq Differential Expression Pipeline
 
-> **Branch status:** This repo currently has two active branches — `main` (this one) and `master` — that have diverged independently and now contain different Snakefile, Dockerfile, and scripts revisions. The content below describes the `main` variant. Treat either branch as authoritative only once they have been consolidated.
+![CI](https://github.com/adamhoffman2155-hue/project-1-rnaseq-pipeline/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Repro](https://img.shields.io/badge/FAIR_DOME_CURE-11%2F14_%7C_N%2FA_%7C_4%2F4-brightgreen)
 
 **Research question:** Which transcriptomic programs drive chemotherapy resistance in gastroesophageal adenocarcinoma?
 
@@ -10,12 +13,13 @@ This is the first project in a [computational biology portfolio](https://github.
 
 End-to-end bulk RNA-seq pipeline using TCGA-STAD expression data:
 
-1. **Read alignment** — STAR aligner to GRCh38 reference genome
-2. **Quantification** — featureCounts for gene-level counts
-3. **Quality control** — FastQC + MultiQC reporting
-4. **Differential expression** — DESeq2 normalization and statistical testing
-5. **Visualization** — Volcano plots, MA plots, heatmaps of top DE genes
-6. **Pathway enrichment** — GSEA/fgsea for biological interpretation
+1. **Quality control** — FastQC per-sample + MultiQC aggregate report
+2. **Read alignment** — STAR aligner to GRCh38 (single-end reads wired in the Snakefile)
+3. **Indexing** — SAMtools index on sorted BAMs
+4. **Quantification** — featureCounts for gene-level counts
+5. **Differential expression** — DESeq2 normalization and statistical testing
+6. **Visualization** — volcano, MA, PCA, and heatmap plots of top DE genes
+7. **Pathway enrichment** — `scripts/gsea_analysis.R` runs fgsea over MSigDB Hallmark + KEGG gene sets as a standalone post-analysis step (not currently part of `rule all`)
 
 ## Methods & Tools
 
@@ -25,8 +29,8 @@ End-to-end bulk RNA-seq pipeline using TCGA-STAD expression data:
 | Quantification | featureCounts |
 | QC | FastQC, MultiQC, SAMtools |
 | DE Analysis | DESeq2 (R) |
-| Visualization | ggplot2, ComplexHeatmap |
-| Enrichment | fgsea / clusterProfiler |
+| Visualization | ggplot2 (volcano / MA / PCA / heatmap) |
+| Enrichment | fgsea + MSigDB Hallmark / KEGG |
 | Workflow | Snakemake |
 | Environment | Docker, Conda |
 
@@ -34,24 +38,26 @@ End-to-end bulk RNA-seq pipeline using TCGA-STAD expression data:
 
 ```
 project-1-rnaseq-pipeline/
-├── README.md
-├── Snakefile
-├── config.yaml
+├── Snakefile                            # fastqc → align → index → count → DE → plots
+├── config.yaml                          # STAR, reference, metadata paths
 ├── Dockerfile
 ├── environment.yml
-├── data/
-│   └── metadata.csv
 ├── scripts/
-│   ├── deseq2_analysis.R
-│   ├── download_reference.sh
-│   ├── gsea_analysis.R
-│   ├── qc.py
-│   ├── visualization.R
+│   ├── download_reference.sh            # Genome & annotation download
+│   ├── qc.py                            # QC summary generation
+│   ├── deseq2_analysis.R                # DESeq2 DE (Snakemake script rule)
+│   ├── visualization.R                  # Volcano / MA / heatmap / PCA
+│   ├── gsea_analysis.R                  # fgsea (standalone CLI post-analysis)
+│   ├── benchmark_deseq2_vs_limma.R      # DESeq2 vs limma-voom benchmark
 │   └── poc/
-│       └── run_poc.py          # Proof-of-concept runner
+│       └── run_poc.py                   # Proof-of-concept runner
+├── data/
+│   └── metadata.csv                     # Sample sheet (raw FASTQ + reference gitignored)
 └── results/
-    └── poc/                    # POC outputs (committed)
+    └── poc/                             # POC outputs (committed)
 ```
+
+Pipeline outputs (QC reports, BAM files, count matrices, DESeq2 tables, figures, logs) are written under `results/` and `logs/` at runtime and are gitignored.
 
 ## Quick Start
 
@@ -67,8 +73,11 @@ docker run -it -v $(pwd):/workspace rnaseq-pipeline bash
 conda env create -f environment.yml
 conda activate rnaseq-pipeline
 
-# Run pipeline
+# Run pipeline (alignment → DE → plots)
 snakemake --cores 4
+
+# Optional: pathway enrichment post-analysis
+Rscript scripts/gsea_analysis.R results/de_analysis/deseq2_results.csv results/enrichment/
 ```
 
 ## Proof of Concept
@@ -109,6 +118,40 @@ I defined the biological question based on my thesis work, selected the TCGA-STA
 ## Context in the Portfolio
 
 This is **Project 1 of 7** in a portfolio that follows a single clinical question from transcriptomics through single-cell analysis, pharmacogenomics, biomarker discovery, phenomics, survival modeling, and software engineering. See the [portfolio site](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) for the full narrative.
+
+### Cross-project data flow
+
+```
+Project 1 (this one — bulk RNA-seq DE + GSEA)
+        │   DEGs, pathway scores
+        ▼
+┌───────────────┬───────────────┬───────────────┐
+│ Project 3     │ Project 4     │ Project 6     │
+│ (drug ML      │ (DDR biomarkers│ (survival     │
+│  features)    │  pathway ctx) │  covariates)  │
+└───────────────┴───────────────┴───────────────┘
+```
+
+- **Upstream** — TCGA-STAD FASTQs / pre-aligned BAMs (external).
+- **Downstream** — gene-level counts and DE tables feed candidate ML features in P3, pathway context for P4's DDR biomarker interpretation, and transcriptomic covariates for P6's Cox survival model (narrative input).
+
+## Benchmarks
+
+| Benchmark | Script | Summary |
+| --- | --- | --- |
+| DESeq2 vs limma-voom | [`scripts/benchmark_deseq2_vs_limma.R`](scripts/benchmark_deseq2_vs_limma.R) | Runs both tools on the same count matrix and writes per-gene padj/log2FC plus concordance columns. Industry-standard DE-tool sanity check (nf-core/rnaseq reports > 85% inter-tool concordance). |
+
+Run locally:
+
+```
+Rscript scripts/benchmark_deseq2_vs_limma.R --help
+```
+
+See [`results/benchmark/README.md`](results/benchmark/README.md) for usage.
+
+## Reproducibility
+
+See [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) for the FAIR-BioRS / CURE self-scorecard (11/14 · N/A · 4/4). DOME is not applicable here (statistical pipeline, not supervised ML).
 
 ## License
 
